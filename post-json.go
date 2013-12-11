@@ -11,8 +11,9 @@ import (
 
 const (
 	MaxUserId = 10000
-	NUMBER_OF_COROUTINE = 100
-	NUMBER_OF_LOOP      = 10
+	NUMBER_OF_COROUTINE = 10
+	NUMBER_OF_LOOP      = 1000
+	RATE_PER_SEC        = 1000
 )
 
 type AccessInfo struct {
@@ -30,12 +31,17 @@ func ipAddress() string{
 }
 
 func post(c chan int) {
-	info := []AccessInfo{{ipAddress(), userId()}}
-	j, _ := json.Marshal(info)
-	resp, err := http.Post("http://localhost:8983/solr/update/json", "application/json", bytes.NewReader(j))
-	if err != nil {
-		fmt.Println(string(j))
-		fmt.Println(resp)
+	throttle := time.Tick(1e9 / RATE_PER_SEC)
+	for i := 0; i < NUMBER_OF_LOOP ; i++ {
+		<- throttle
+		info := []AccessInfo{{ipAddress(), userId()}}
+		j, _ := json.Marshal(info)
+		resp, err := http.Post("http://localhost:8983/solr/update/json", "application/json", bytes.NewReader(j))
+		if err != nil {
+			fmt.Println(err)
+			fmt.Println(string(j))
+			fmt.Println(resp)
+		}
 	}
 	c <- 1
 }
@@ -43,14 +49,12 @@ func post(c chan int) {
 
 func main() {
 	rand.Seed( time.Now().UTC().UnixNano())
-	for j := 0; j < NUMBER_OF_LOOP ; j++ {
-		c := make(chan int, NUMBER_OF_COROUTINE)
-		for i := 0; i < NUMBER_OF_COROUTINE; i++ {
-			go post(c)
-		}
-		for i := 0; i < NUMBER_OF_COROUTINE; i++ {
-			<- c
-		}
+	c := make(chan int, NUMBER_OF_COROUTINE)
+	for i := 0; i < NUMBER_OF_COROUTINE; i++ {
+		go post(c)
+	}
+	for i := 0; i < NUMBER_OF_COROUTINE; i++ {
+		<- c
 	}
 	fmt.Println("all done")
 }
