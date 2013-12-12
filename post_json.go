@@ -7,39 +7,26 @@ import (
 	"bytes"
 	"math/rand"
 	"time"
+	"flag"
 )
 
 const (
-	MaxUserId = 10000
 	NUMBER_OF_COROUTINE = 10
 	NUMBER_OF_LOOP      = 1000
 	RATE_PER_SEC        = 1000
 )
 
-type AccessInfo struct {
-	Ip_address string `json:"ip_address"`
-	User_id    int64  `json:"user_id"`
-}
-
-func userId() int64 {
-	return int64(rand.Intn(MaxUserId) + 1)
-}
-
-func ipAddress() string{
-	num := rand.Int31()
-	return fmt.Sprintf("%d.%d.%d.%d", num >> 24, (num >> 16) % 256, (num >> 8) % 256, num % 256)
-}
 
 func post(c chan int) {
 	throttle := time.Tick(1e9 / RATE_PER_SEC)
 	for i := 0; i < NUMBER_OF_LOOP ; i++ {
 		<- throttle
-		info := []AccessInfo{{ipAddress(), userId()}}
-		j, _ := json.Marshal(info)
-		resp, err := http.Post("http://localhost:8983/solr/update/json", "application/json", bytes.NewReader(j))
+		info := []AccessInfo{GetAccessInfo()}
+		json, _ := json.Marshal(info)
+		resp, err := http.Post("http://localhost:8983/solr/update/json", "application/json", bytes.NewReader(json))
 		if err != nil {
 			fmt.Println(err)
-			fmt.Println(string(j))
+			fmt.Println(string(json))
 			fmt.Println(resp)
 		}
 	}
@@ -49,6 +36,15 @@ func post(c chan int) {
 
 func main() {
 	rand.Seed( time.Now().UTC().UnixNano())
+
+	do_httperf := flag.Bool("httperf", false, "write httperf wsesslog")
+	flag.Parse()
+
+	if *do_httperf {
+		write_httperf_wsesslog()
+		return
+	}
+
 	c := make(chan int, NUMBER_OF_COROUTINE)
 	for i := 0; i < NUMBER_OF_COROUTINE; i++ {
 		go post(c)
