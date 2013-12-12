@@ -1,13 +1,13 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"net/http"
 	"bytes"
-	"math/rand"
-	"time"
+	"encoding/json"
 	"flag"
+	"fmt"
+	"math/rand"
+	"net/http"
+	"time"
 )
 
 const (
@@ -16,11 +16,10 @@ const (
 	RATE_PER_SEC        = 1000
 )
 
-
 func post(c chan int) {
 	throttle := time.Tick(1e9 / RATE_PER_SEC)
-	for i := 0; i < NUMBER_OF_LOOP ; i++ {
-		<- throttle
+	for i := 0; i < NUMBER_OF_LOOP; i++ {
+		<-throttle
 		info := []AccessInfo{GetAccessInfo()}
 		json, _ := json.Marshal(info)
 		resp, err := http.Post("http://localhost:8983/solr/update/json", "application/json", bytes.NewReader(json))
@@ -33,9 +32,8 @@ func post(c chan int) {
 	c <- 1
 }
 
-
 func main() {
-	rand.Seed( time.Now().UTC().UnixNano())
+	rand.Seed(time.Now().UTC().UnixNano())
 
 	do_httperf := flag.Bool("httperf", false, "write httperf wsesslog")
 	flag.Parse()
@@ -50,7 +48,7 @@ func main() {
 		go post(c)
 	}
 	for i := 0; i < NUMBER_OF_COROUTINE; i++ {
-		<- c
+		<-c
 	}
 	fmt.Println("all done")
 }
