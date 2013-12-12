@@ -11,12 +11,18 @@ const (
 	NUMBER_OF_SESSION         = 10
 )
 
-func write_httperf_wsesslog() {
+func write_httperf_wsesslog(is_elasticsearch bool) {
 	for j := 0; j < NUMBER_OF_SESSION; j++ {
 		for i := 0; i < NUMBER_OF_SESSION_ENTRIES; i++ {
-			info := []AccessInfo{GetAccessInfo()}
-			json, _ := json.Marshal(info)
-			fmt.Printf("/solr/update/json method=POST contents='%s'\n", strings.Replace(string(json), "'", "\\'", -1))
+			if is_elasticsearch {
+				info := GetAccessInfo()
+				json, _ := json.Marshal(info)
+				fmt.Printf("/access/ method=POST contents='%s'\n", strings.Replace(string(json), "'", "\\'", -1))
+			} else {
+				info := []AccessInfo{GetAccessInfo()}
+				json, _ := json.Marshal(info)
+				fmt.Printf("/solr/update/json method=POST contents='%s'\n", strings.Replace(string(json), "'", "\\'", -1))
+			}
 		}
 		fmt.Println()
 	}
