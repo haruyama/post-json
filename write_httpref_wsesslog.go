@@ -17,7 +17,7 @@ func write_httperf_wsesslog(is_elasticsearch bool) {
 			if is_elasticsearch {
 				info := GetAccessInfo()
 				json, _ := json.Marshal(info)
-				fmt.Printf("/access/ method=POST contents='%s'\n", strings.Replace(string(json), "'", "\\'", -1))
+				fmt.Printf("/access_info/access_info method=POST contents='%s'\n", strings.Replace(string(json), "'", "\\'", -1))
 			} else {
 				info := []AccessInfo{GetAccessInfo()}
 				json, _ := json.Marshal(info)
