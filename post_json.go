@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"math/rand"
@@ -18,16 +17,6 @@ const (
 	URL_ELASTICSEARCH   = "http://localhost:9200/access_info/access_info"
 )
 
-func getAccessInfoJson(is_elasticsearch bool) []byte {
-	if is_elasticsearch {
-		json, _ := json.Marshal(GetAccessInfo())
-		return json
-	} else {
-		json, _ := json.Marshal([]AccessInfo{GetAccessInfo()})
-		return json
-	}
-}
-
 func getUrl(is_elasticsearch bool) string {
 	if is_elasticsearch {
 		return URL_ELASTICSEARCH
@@ -39,7 +28,7 @@ func post(is_elasticsearch bool, c chan int) {
 	throttle := time.Tick(1e9 / RATE_PER_SEC)
 	for i := 0; i < NUMBER_OF_LOOP; i++ {
 		<-throttle
-		json := getAccessInfoJson(is_elasticsearch)
+		json := GetAccessInfoJson(is_elasticsearch)
 		resp, err := http.Post(getUrl(is_elasticsearch), "application/json", bytes.NewReader(json))
 		if err != nil {
 			fmt.Println(err)

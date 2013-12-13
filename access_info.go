@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"time"
@@ -51,4 +52,14 @@ func dateTime() string {
 
 func GetAccessInfo() AccessInfo {
 	return AccessInfo{ipAddress(), userId(), path(), userAgent(), mobileCarrier(), dateTime()}
+}
+
+func GetAccessInfoJson(is_elasticsearch bool) []byte {
+	if is_elasticsearch {
+		json, _ := json.Marshal(GetAccessInfo())
+		return json
+	} else {
+		json, _ := json.Marshal([]AccessInfo{GetAccessInfo()})
+		return json
+	}
 }
